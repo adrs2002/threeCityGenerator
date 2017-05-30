@@ -26,6 +26,10 @@ class jenCity extends THREE.Object3D {
         this.clock = new THREE.Clock();
 
         this.geo = new THREE.InstancedBufferGeometry();
+        
+
+
+
         this.geo.copy(new THREE.BoxBufferGeometry(5, 5, 5));
 
         this.oneSize = 128;
@@ -246,14 +250,7 @@ class jenCity extends THREE.Object3D {
         varying vec3 vCol;
 
         void main() {
-            /*
-            vec4 mvPosition = modelViewMatrix * vec4( translate, 1.0 );
-            vec3 vertexPos = position * scale;  
-            vec4 mvVector = vec4(mvPosition.xyz + vertexPos, 1.0);
-           
-            gl_Position =  projectionMatrix * mvVector;  
-             */
-
+          
             vec4 mvPosition = vec4( translate, 1.0 );
             vec3 vertexPos = position * scale;  
             vec4 mvVector = vec4(mvPosition.xyz + vertexPos, 1.0);
