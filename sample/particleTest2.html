@@ -1,0 +1,186 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+ <title>three.js webgl - Particle Plugin Sample 2</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+
+    <style>
+        body {
+            font-family: Monospace;
+            background-color: #000;
+            color: #fff;
+            margin: 0px;
+            overflow: hidden;
+        }
+
+        #info {
+            color: #fff;
+            position: absolute;
+            top: 10px;
+            width: 100%;
+            text-align: center;
+            z-index: 100;
+            display: block;
+        }
+
+        #info a,
+        .button {
+            color: #f00;
+            font-weight: bold;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="info">
+        <a href="http://threejs.org" target="_blank">three.js</a> Particle Effect Test<br />
+        create by <a href="https://github.com/adrs2002/Three.JenParticle" target="_blank"> Jey-en : Repo </a>
+    </div>
+    <div id="canvase3d"></div>
+
+    <!-- <script src="three.min.js"></script> -->
+    <script src="../three.min.js"></script>
+    <script src="../lib/OrbitControls.js"></script>
+
+    <!-- 追加点その１。プラグインを読む -->
+    <script src="../threeJenParticle.js"></script>
+
+    <script src="../lib/Detector.js"></script>
+    <script src="../lib/stats.min.js"></script>
+    <script>
+        var StringBuffer = function (string) {
+            this.buffer = [];
+            this.append = function (string) { this.buffer.push(string); return this; };
+            this.toString = function () { return this.buffer.join(''); };
+            if (string) { this.append(string); }
+        };
+
+        if (!Detector.webgl) Detector.addGetWebGLMessage();
+        var container, stats, controls;
+        var camera, scene, renderer;
+        var clock = new THREE.Clock();
+
+        scene = new THREE.Scene();
+        //追加点その２。オブジェクトを用意。後々アクセスできるように、変数内ではなく、こんな感じでnullで用意
+        var jenP = null;
+        var jenP2 = null;
+
+        var basePoses = [];
+        init();
+
+        function init() {
+
+            container = document.createElement('div');
+
+            document.body.appendChild(container);
+            camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 2000);
+
+            // grid
+            var gridHelper = new THREE.GridHelper(14, 1, 0x303030, 0x303030);
+            gridHelper.position.set(0, 0, 0);
+            scene.add(gridHelper);
+            // stats
+            stats = new Stats();
+            container.appendChild(stats.dom);
+
+            renderer = new THREE.WebGLRenderer();
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setClearColor(0x222222);
+            container.appendChild(renderer.domElement);
+            if (renderer.extensions.get('ANGLE_instanced_arrays') === false) {
+                // document.getElementById( "notSupported" ).style.display = "";
+                return false;
+            }
+
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.target.set(0, 0, 0);
+            camera.position.set(0, 2, 30);
+            camera.up.set(0, 1, 0);
+
+            //////////////////////////////////////////////////
+            //追加点その３。new宣言をして、sceneにaddする。
+            jenP = new jenParticle({
+                isAlphaAdd: false,
+                isTextured: true,
+                colors: [new THREE.Color(1.0, 1.0, 0.5), new THREE.Color(0.8, 0.4, 0.0), new THREE.Color(0.2, 0.0, 0.0)],
+                gravity: new THREE.Vector3(0.0, 0.1, 0.0),
+                vectorTransform: false
+            });
+            scene.add(jenP);
+
+            jenP2 = new jenParticle({
+                isAlphaAdd: true,
+                isTextured: true,
+                colors: [new THREE.Color(1.0, 1.0, 0.5), new THREE.Color(0.8, 0.4, 0.0), new THREE.Color(0.2, 0.0, 0.0)],
+                gravity: new THREE.Vector3(0.0, 0.01, 0.0),
+                vectorTransform: true
+            });
+            scene.add(jenP2);
+
+            /// パーティクル出現位置の設定。
+            for (let i = 0; i < 20; i++) {
+                basePoses.push(new THREE.Vector3((Math.random() - 0.5) * 50, 0.0, (Math.random() - 0.5) * 50));
+            }
+            //////////////////////////////////////////
+
+            controls.update();
+            window.addEventListener('resize', onWindowResize, false);
+            animate();
+
+        }
+
+        //
+        function animate() {
+
+            requestAnimationFrame(animate);
+
+            // 追加点その４。パーティクルを追加する。１フレームで追加する数が引数となる。
+            for (let i = 0; i < basePoses.length; i++) {
+
+                jenP.appearsParticle(1,
+                    {
+                        basePos: basePoses[i],
+                        scale: Math.random() * 0.3 + 2.0, // 大きさのブレを少なくする
+                        vect: new THREE.Vector3(Math.random() - 0.5, Math.random() - 0.5 + 0.5, Math.random() - 0.5),
+                        speed: 0.1,
+                        explose: 0.1,
+                        viscosity: 1.0,
+                        lifeTimeFactor: (Math.random() - 0.5) * 0.5 + 1.0
+                    }
+                );
+
+                jenP2.appearsParticle(1,
+                    {
+                        basePos: basePoses[i],
+                        scale: Math.random() * 0.3, // 大きさのブレを少なくする
+                        vect: new THREE.Vector3(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5),
+                        speed: 0.3,
+                        explose: 0.1,
+                        viscosity: 0.8,
+                        lifeTimeFactor: (Math.random() - 0.5) * 0.5 + 1.0
+                    }
+                );
+            }
+
+            stats.update();
+            render();
+        }
+
+        function render() {
+            renderer.render(scene, camera);
+        }
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+    </script>
+
+</body>
+
+</html>
